@@ -10,33 +10,7 @@ I've ended up making my own models for some of the 3D printed parts to match my 
 
 ## Progress
 
-### 2024-11-07
-
-The robot is fully printed and moving! This is just a simple [python test script](motor-test.py). Now it's time to start on the actual drawing software. I realized I need some thinner dry-erase markers, I'm having trouble finding that locally so I have some arriving today or tomorrow.
-
-![robot moving on window](images/robot_rise.gif)
-
-I had to order another pair of motor driver boards, one of the pair I received was broken. I've also ordered the tools and parts I need to make longer stepper motor cables, they need to be at least 3 meters long to draw on the windows I'm planning to use this on.
-
-### 2024-11-04
-
-The exact suction cups used in the original drawbot are no longer available. I found some similar ones online, but I have to modify the motor mount piece to allow for the slightly shorter suction cup stem.
-
-Rather than stripping USB cables to wire up the motors, I'm going to try using some extra ethernet cable that I have lying around. I think it should be able to handle the current.
-
-I have a raspberry pi 2 that was retired from another project, I'm going to use that rather than the pi zero.
-
-The NEMA 17 motors I already have on hand look very similar on the spec sheets, I'm going to try using them.
-
-New [spool](models/spool.scad) and [motor mount](models/motor_mount.scad) designs.
-
-![spool in OpenSCAD](images/openscad_spool.png)
-![motor mount in OpenSCAD](images/openscad_motor_mount.png)
-
-Testing the mount on a window:
-
-![motor assembly on window](images/mount_on_window.jpeg)
-
+I'm keeping a journal in a [separate document](JOURNAL.md).
 
 ## Links
 
