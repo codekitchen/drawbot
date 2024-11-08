@@ -2,6 +2,14 @@
 
 ## 2024-11-08
 
+I got a chance to brush off my rusty trig skills and figured out how to map moving between (x,y) coordinates into rotations of the two motors.
+
+Then I started in on the actual web UI. The backend is written in Go. I plan to keep most of the smarts in the browser, the backend will just execute simple draw commands and persist state to disk. I got enough done on that today to enable manual etch-a-sketch style drawing.
+
+![manual drawing](images/manual_draw.jpeg)
+
+## 2024-11-08
+
 I went down a rabbit hole of using AprilTags to automatically calibrate the robot with the positions of the motors and pen. I have a proof-of-concept compiling the [apriltag C library](https://github.com/AprilRobotics/apriltag) to WebAssembly so that the whole process can happen client-side in the browser UI. It was difficult working out how to get the camera focal length in pixels using just EXIF data, but I have something that is working well at least for iPhone cameras.
 
 I put an apriltag on each motor, placed them 350cm apart, and I get a very accurate reading from a photo taken right in the browser:
