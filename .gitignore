@@ -1,2 +1,3 @@
 models/*.stl
 .DS_Store
+tmp/
