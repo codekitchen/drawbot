@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"embed"
-	"expvar"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -32,16 +31,17 @@ func run() error {
 		Level: slog.LevelDebug,
 	})))
 
-	listenAddr := "0.0.0.0:4011"
-	if len(os.Args) > 1 {
-		listenAddr = os.Args[1]
-	}
+	internal.MotorControllerInit()
+	defer internal.MotorControllerClose()
+
+	port := 80
+	listenAddr := fmt.Sprintf("0.0.0.0:%d", port)
 
 	l, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return err
 	}
-	slog.Info(fmt.Sprintf("listening on http://%v", l.Addr()))
+	slog.Info("listening on http://drawbot.local")
 
 	files, _ := fs.Sub(static, "public")
 
@@ -49,7 +49,6 @@ func run() error {
 	wsHandler := internal.NewServer()
 	handler.Handle("/ws", wsHandler)
 	handler.Handle("/", http.FileServer(http.FS(files)))
-	handler.Handle("/debug/vars", expvar.Handler())
 
 	s := &http.Server{
 		Handler:      handler,
