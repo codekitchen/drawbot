@@ -79,6 +79,7 @@ func (s WebsocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *WebsocketServer) writeStatus(ctx context.Context, ws *websocket.Conn) error {
 	res := &Command{
 		Command: "status",
+		D:       s.mc.D,
 		X:       s.mc.X,
 		Y:       s.mc.Y,
 	}

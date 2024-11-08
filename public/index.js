@@ -8,6 +8,7 @@ ws.onmessage = (event) => {
   let msg = JSON.parse(event.data)
   console.log('received', msg)
   if (msg.command === 'status') {
+    document.querySelector('#startd').value = msg.d
     document.querySelector('#startx').value = msg.x
     document.querySelector('#starty').value = msg.y
   }

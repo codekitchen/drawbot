@@ -91,17 +91,57 @@ func NewMotorController() *MotorController {
 	return m
 }
 
+type vec2 struct {
+	x, y float64
+}
+
+func (a vec2) add(b vec2) vec2 {
+	return vec2{a.x + b.x, a.y + b.y}
+}
+func (a vec2) sub(b vec2) vec2 {
+	return vec2{a.x - b.x, a.y - b.y}
+}
+func (v vec2) mul(s float64) vec2 {
+	return vec2{v.x * s, v.y * s}
+}
+func (v vec2) mag() float64 {
+	return math.Sqrt(v.x*v.x + v.y*v.y)
+}
+func (v vec2) norm() vec2 {
+	mag := v.mag()
+	return vec2{v.x / mag, v.y / mag}
+}
+
 func (m *MotorController) MoveTo(x, y float64) {
-	h1s := math.Sqrt(m.X*m.X + m.Y*m.Y)
-	h2s := math.Sqrt((m.D-m.X)*(m.D-m.X) + m.Y*m.Y)
-	h1e := math.Sqrt(x*x + y*y)
-	h2e := math.Sqrt((m.D-x)*(m.D-x) + y*y)
+	cur := vec2{m.X, m.Y}
+	dst := vec2{x, y}
+	diff := dst.sub(cur)
+	if diff.mag() < 0.1 {
+		return
+	}
+	dir := diff.norm()
+	step := cur
+	for dst.sub(step).mag() > 0.1 {
+		m.moveStep(step.x, step.y)
+		stepdist := min(dst.sub(step).mag(), 1.0)
+		step = step.add(dir.mul(stepdist))
+	}
+}
+
+func (m *MotorController) moveStep(x, y float64) {
+	lcur := vec2{m.X, m.Y}
+	rcur := vec2{m.D - m.X, m.Y}
+	ldst := vec2{x, y}
+	rdst := vec2{m.D - x, y}
+	h1s := lcur.mag()
+	h2s := rcur.mag()
+	h1e := ldst.mag()
+	h2e := rdst.mag()
 
 	h1d, h2d := h1e-h1s, h2e-h2s
 	lsteps := int(h1d * stepsPerMM)
 	rsteps := int(h2d * stepsPerMM)
-	// timespan := time.Millisecond * 4 * time.Duration(max(lsteps, rsteps))
-	slog.Debug("move steps", "left", lsteps, "right", rsteps)
+	// slog.Debug("move steps", "left", lsteps, "right", rsteps)
 
 	lsteps = setDir(m.LdirPin, rpio.High, lsteps)
 	rsteps = setDir(m.RdirPin, rpio.Low, rsteps)
@@ -118,10 +158,10 @@ func (m *MotorController) MoveTo(x, y float64) {
 			rmoved -= nsteps
 			m.RstePin.High()
 		}
-		time.Sleep(time.Millisecond * 2)
+		time.Sleep(time.Millisecond)
 		m.LstePin.Low()
 		m.RstePin.Low()
-		time.Sleep(time.Millisecond * 2)
+		time.Sleep(time.Millisecond)
 	}
 
 	m.X, m.Y = x, y
