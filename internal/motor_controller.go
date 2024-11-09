@@ -121,11 +121,12 @@ func (m *MotorController) MoveTo(x, y float64) {
 	}
 	dir := diff.norm()
 	step := cur
-	for dst.sub(step).mag() > 0.1 {
+	for dst.sub(step).mag() > 1.0 {
 		m.moveStep(step.x, step.y)
-		stepdist := min(dst.sub(step).mag(), 1.0)
-		step = step.add(dir.mul(stepdist))
+		step = step.add(dir)
 	}
+	// final move to exact requested position
+	m.moveStep(x, y)
 }
 
 func (m *MotorController) moveStep(x, y float64) {
@@ -139,6 +140,7 @@ func (m *MotorController) moveStep(x, y float64) {
 	h2e := rdst.mag()
 
 	h1d, h2d := h1e-h1s, h2e-h2s
+	// TODO: handle this rounding error better
 	lsteps := int(h1d * stepsPerMM)
 	rsteps := int(h2d * stepsPerMM)
 	// slog.Debug("move steps", "left", lsteps, "right", rsteps)
