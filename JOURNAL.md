@@ -1,5 +1,19 @@
 # Project Journal
 
+## 2024-11-11
+
+Drawing a triforce!
+
+![drawing a triforce](images/draw_triforce.gif)
+
+This is a hard-coded list of points. Next steps:
+
+* Parse SVG to draw commands.
+* Allow scaling and translation of the SVG commands to fit the desired space.
+* Lifting the pen. I'm waiting on some hardware parts for this one.
+
+The apriltag calibration setup works pretty well, but my y distance calculation is a little bit off somewhere. Safari on iOS makes the UX a little rough, sadly. If you take a photo directly in the browser, it doesn't include the EXIF data. So you have to take a photo in the photos app, then switch over to the browser and upload it. 😮‍💨
+
 ## 2024-11-08
 
 I got a chance to brush off my rusty trig skills and figured out how to map moving between (x,y) coordinates into rotations of the two motors.
