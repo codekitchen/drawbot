@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Draw Bot</title>
-  <script src="exif.js"></script>
   <script type="module" src="server.js"></script>
   <script type="module" src="setup.js"></script>
 </head>
@@ -13,7 +12,9 @@
 <body>
   <server-connection></server-connection>
   <h2>Setup</h2>
+  <input type="file" id="setup-img" accept="image/*" />
   <div id="errors"></div>
+  <pre id="dist-output"></pre>
 </body>
 
 </html>

@@ -31,6 +31,10 @@ class ServerConnection extends HTMLElement {
     this.ws.onmessage = this.serverMessage
   }
 
+  send(msg) {
+    this.ws.send(JSON.stringify(msg))
+  }
+
   serverClose = () => {
     this.connect()
   }

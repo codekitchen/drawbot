@@ -1,9 +1,10 @@
-document.querySelector('server-connection').connect((msg) => {
+const server = document.querySelector('server-connection');
+server.connect((msg) => {
   console.log('received', msg)
   if (msg.command === 'status') {
-    document.querySelector('#startd').value = msg.d
-    document.querySelector('#startx').value = msg.x
-    document.querySelector('#starty').value = msg.y
+    document.querySelector('#startd').value = msg.d.toFixed(0)
+    document.querySelector('#startx').value = msg.x.toFixed(2)
+    document.querySelector('#starty').value = msg.y.toFixed(2)
   }
 })
 
@@ -15,7 +16,7 @@ setupForm.addEventListener("submit", (event) => {
   for (let v of setupForm) {
     msg[v.name] = +v.value
   }
-  ws.send(JSON.stringify(msg))
+  server.send(msg)
   console.log('sent setup data', msg)
 });
 
@@ -27,6 +28,18 @@ testForm.addEventListener("submit", (event) => {
   for (let v of testForm) {
     msg[v.name] = +v.value
   }
-  ws.send(JSON.stringify(msg))
+  server.send(msg)
   console.log('sent test data', msg)
 });
+
+document.querySelector('#triforce').addEventListener('click', () => {
+  let startx = +document.querySelector('#startx').value
+  let starty = +document.querySelector('#starty').value
+  server.send({"command": "moveTo", "x": startx+75, "y": starty+150})
+  server.send({"command": "moveTo", "x": startx, "y": starty+300})
+  server.send({"command": "moveTo", "x": startx-75, "y": starty+150})
+  server.send({"command": "moveTo", "x": startx+75, "y": starty+150})
+  server.send({"command": "moveTo", "x": startx+150, "y": starty+300})
+  server.send({"command": "moveTo", "x": startx-150, "y": starty+300})
+  server.send({"command": "moveTo", "x": startx, "y": starty})
+})

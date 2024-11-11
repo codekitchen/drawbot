@@ -1,6 +1,9 @@
 import Apriltag from './apriltag.js'
+import exifr from './exifr.js'
 
 let apriltag = await Apriltag()
+const stringOffsetX = 45, stringOffsetY = 76;
+const penOffsetY = -60;
 
 const api = {
   create_buffer: apriltag.cwrap("create_buffer", "number", ["number", "number"]),
@@ -8,15 +11,25 @@ const api = {
   detect_wasm: apriltag.cwrap("detect_wasm", "string", ["number", "number", "number", "number", "number", "number"]),
 };
 
-const img = new Image();
-img.src = "./IMG_1889.jpeg";
-img.onload = () => setupUsingImg(img);
+// const img = new Image();
+// img.src = "./IMG_1889.jpeg";
+// img.onload = () => setupUsingImg(img);
+
+document.querySelector('#setup-img').onchange = (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => setupUsingImg(img);
+  img.src = URL.createObjectURL(file);
+}
 
 async function setupUsingImg(img) {
   try {
     const tagsize = 0.025; // 1 inch
-    let exif = await readEXIF(img);
-    const { fx, fy } = focalLength(exif);
+    let exif = await exifr.parse(img);
+    // document.querySelector('#exif-data').innerText = JSON.stringify(exif, null, 2);
+
+    const { fx, fy } = focalLength(img, exif);
 
     const cimage = getImageData(img);
     const wasm_p = api.create_buffer(cimage.width, cimage.height);
@@ -27,11 +40,21 @@ async function setupUsingImg(img) {
     console.log("ran apriltag", result);
     let t11 = result.tags.find(t => t.id === 11);
     let t12 = result.tags.find(t => t.id === 12);
+    let t13 = result.tags.find(t => t.id === 13);
     if (!t11 || !t12) {
       throw new Error(`couldn't find tags 11 and 12. Tags found: ${result.tags.map(t => t.id)}`);
     }
-    let dist = distance(t11, t12);
+    let dist = distance(t11, t12) * 1000;
     console.log("dist", dist);
+    let penX = 0, penY = 0;
+    if (t13) {
+      penX = 1000 * Math.abs(t13.pose.t[0] - t11.pose.t[0]) - stringOffsetX;
+      penY = 1000 * Math.abs(t13.pose.t[1] - t11.pose.t[1]);
+    }
+    document.querySelector('#dist-output').innerText =
+      `distance between tags: ${dist.toFixed(2)}
+       distance with offset: ${(dist - stringOffsetX * 2).toFixed(2)}
+       pen offset x: ${penX.toFixed(2)} y: ${penY.toFixed(2)}`;
 
     api.destroy_buffer(wasm_p);
 
@@ -54,20 +77,13 @@ async function setupUsingImg(img) {
     }
   } catch (e) {
     document.querySelector('#errors').innerText = e.message;
+    throw e;
   }
 }
 
-function readEXIF(img) {
-  return new Promise(resolve => {
-    EXIF.getData(img, function () {
-      resolve(this);
-    })
-  })
-}
-
-function focalLength(exif) {
-  const flen = +EXIF.getTag(exif, "FocalLength")
-  const fequiv = EXIF.getTag(exif, "FocalLengthIn35mmFilm")
+function focalLength(img, exif) {
+  const flen = exif.FocalLength
+  const fequiv = exif.FocalLengthIn35mmFormat
   if (!flen || !fequiv) {
     throw new Error("couldn't find focal length information in image EXIF data.");
   }
