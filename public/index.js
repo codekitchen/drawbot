@@ -1,18 +1,11 @@
-// const loc = window.location
-// const protocol = loc.protocol === 'https:' ? 'wss:' : 'ws:'
-// const url = `${protocol}//${loc.host}/ws`
-const url = `ws://drawbot.local/ws`
-let ws = new WebSocket(url)
-
-ws.onmessage = (event) => {
-  let msg = JSON.parse(event.data)
+document.querySelector('server-connection').connect((msg) => {
   console.log('received', msg)
   if (msg.command === 'status') {
     document.querySelector('#startd').value = msg.d
     document.querySelector('#startx').value = msg.x
     document.querySelector('#starty').value = msg.y
   }
-}
+})
 
 let setupForm = document.querySelector('form#setup')
 setupForm.addEventListener("submit", (event) => {
