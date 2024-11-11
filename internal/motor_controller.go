@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math"
 	"os"
 	"time"
 
@@ -93,58 +92,37 @@ func NewMotorController() *MotorController {
 	return m
 }
 
-type vec2 struct {
-	x, y float64
-}
-
-func (a vec2) add(b vec2) vec2 {
-	return vec2{a.x + b.x, a.y + b.y}
-}
-func (a vec2) sub(b vec2) vec2 {
-	return vec2{a.x - b.x, a.y - b.y}
-}
-func (v vec2) mul(s float64) vec2 {
-	return vec2{v.x * s, v.y * s}
-}
-func (v vec2) mag() float64 {
-	return math.Sqrt(v.x*v.x + v.y*v.y)
-}
-func (v vec2) norm() vec2 {
-	mag := v.mag()
-	return vec2{v.x / mag, v.y / mag}
-}
-
 func (m *MotorController) MoveTo(x, y float64) {
 	m.LdirPin.Output()
 	m.RdirPin.Output()
 	m.LstePin.Output()
 	m.RstePin.Output()
 
-	cur := vec2{m.X, m.Y}
-	dst := vec2{x, y}
-	diff := dst.sub(cur)
-	if diff.mag() < 0.1 {
+	cur := Vec2{m.X, m.Y}
+	dst := Vec2{x, y}
+	diff := dst.Sub(cur)
+	if diff.Mag() < 0.1 {
 		return
 	}
-	dir := diff.norm()
-	step := cur.add(dir)
-	for dst.sub(step).mag() > 1.0 {
+	dir := diff.Norm()
+	step := cur.Add(dir)
+	for dst.Sub(step).Mag() > 1.0 {
 		m.moveStep(step.x, step.y)
-		step = step.add(dir)
+		step = step.Add(dir)
 	}
 	// final move to exact requested position
 	m.moveStep(x, y)
 }
 
 func (m *MotorController) moveStep(x, y float64) {
-	lstart := vec2{m.startX, m.startY}
-	rstart := vec2{m.D - m.startX, m.startY}
-	ldst := vec2{x, y}
-	rdst := vec2{m.D - x, y}
-	h1s := lstart.mag()
-	h2s := rstart.mag()
-	h1e := ldst.mag()
-	h2e := rdst.mag()
+	lstart := Vec2{m.startX, m.startY}
+	rstart := Vec2{m.D - m.startX, m.startY}
+	ldst := Vec2{x, y}
+	rdst := Vec2{m.D - x, y}
+	h1s := lstart.Mag()
+	h2s := rstart.Mag()
+	h1e := ldst.Mag()
+	h2e := rdst.Mag()
 
 	h1d, h2d := h1e-h1s, h2e-h2s
 	lstepsabs := int(h1d * stepsPerMM)
