@@ -16,6 +16,7 @@ type Command struct {
 	D       float64 `json:"d"`
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
+	Pen     bool    `json:"pen"`
 }
 
 type MotorController struct {

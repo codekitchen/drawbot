@@ -1,10 +1,20 @@
-const server = document.querySelector('server-connection');
+import './svg_draw.js'
+
 server.connect((msg) => {
   console.log('received', msg)
   if (msg.command === 'status') {
     document.querySelector('#startd').value = msg.d.toFixed(0)
     document.querySelector('#startx').value = msg.x.toFixed(2)
     document.querySelector('#starty').value = msg.y.toFixed(2)
+    svg_draw.changeStart(msg.x, msg.y);
+  }
+})
+
+svg_draw.addEventListener('draw', (ev) => {
+  console.log('drawing svg', ev);
+  const commands = ev.detail.commands;
+  for (let cmd of commands) {
+    server.send(cmd);
   }
 })
 
