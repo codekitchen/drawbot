@@ -27,6 +27,9 @@ type MotorController struct {
 
 	X, Y float64 // current pos
 	D    float64 // distance between strings
+
+	startX, startY float64 // start position
+	stepL, stepR   int     // current steps, current pos has to be rounded to step positions
 }
 
 func MotorControllerInit() {
@@ -51,6 +54,7 @@ func LoadMotorController(path string) (*MotorController, error) {
 	if err != nil {
 		return nil, err
 	}
+	mc.startX, mc.startY = mc.X, mc.Y
 	return mc, nil
 }
 
@@ -71,6 +75,8 @@ func (m *MotorController) Do(cmd Command) {
 		m.D = cmd.D
 		m.X = cmd.X
 		m.Y = cmd.Y
+		m.startX, m.startY = m.X, m.Y
+		m.stepL, m.stepR = 0, 0
 	case "moveTo":
 		slog.Debug("moveTo", "cmd", cmd)
 		m.MoveTo(cmd.X, cmd.Y)
@@ -84,10 +90,6 @@ func NewMotorController() *MotorController {
 		RdirPin: rpio.Pin(20),
 		RstePin: rpio.Pin(21),
 	}
-	m.LdirPin.Output()
-	m.RdirPin.Output()
-	m.LstePin.Output()
-	m.RstePin.Output()
 	return m
 }
 
@@ -113,6 +115,11 @@ func (v vec2) norm() vec2 {
 }
 
 func (m *MotorController) MoveTo(x, y float64) {
+	m.LdirPin.Output()
+	m.RdirPin.Output()
+	m.LstePin.Output()
+	m.RstePin.Output()
+
 	cur := vec2{m.X, m.Y}
 	dst := vec2{x, y}
 	diff := dst.sub(cur)
@@ -120,7 +127,7 @@ func (m *MotorController) MoveTo(x, y float64) {
 		return
 	}
 	dir := diff.norm()
-	step := cur
+	step := cur.add(dir)
 	for dst.sub(step).mag() > 1.0 {
 		m.moveStep(step.x, step.y)
 		step = step.add(dir)
@@ -130,23 +137,25 @@ func (m *MotorController) MoveTo(x, y float64) {
 }
 
 func (m *MotorController) moveStep(x, y float64) {
-	lcur := vec2{m.X, m.Y}
-	rcur := vec2{m.D - m.X, m.Y}
+	lstart := vec2{m.startX, m.startY}
+	rstart := vec2{m.D - m.startX, m.startY}
 	ldst := vec2{x, y}
 	rdst := vec2{m.D - x, y}
-	h1s := lcur.mag()
-	h2s := rcur.mag()
+	h1s := lstart.mag()
+	h2s := rstart.mag()
 	h1e := ldst.mag()
 	h2e := rdst.mag()
 
 	h1d, h2d := h1e-h1s, h2e-h2s
-	// TODO: handle this rounding error better
-	lsteps := int(h1d * stepsPerMM)
-	rsteps := int(h2d * stepsPerMM)
-	// slog.Debug("move steps", "left", lsteps, "right", rsteps)
+	lstepsabs := int(h1d * stepsPerMM)
+	rstepsabs := int(h2d * stepsPerMM)
+	lsteps := lstepsabs - m.stepL
+	rsteps := rstepsabs - m.stepR
 
-	lsteps = setDir(m.LdirPin, rpio.High, lsteps)
-	rsteps = setDir(m.RdirPin, rpio.Low, rsteps)
+	// slog.Debug("moveStep", "lstepsabs", lstepsabs, "lsteps", lsteps, "rstepsabs", rstepsabs, "rsteps", rsteps)
+
+	lsteps = setDir(m.LdirPin, rpio.Low, lsteps)
+	rsteps = setDir(m.RdirPin, rpio.High, rsteps)
 	nsteps := max(lsteps, rsteps)
 	lmoved, rmoved := 0, 0
 	for range nsteps {
@@ -167,6 +176,7 @@ func (m *MotorController) moveStep(x, y float64) {
 	}
 
 	m.X, m.Y = x, y
+	m.stepL, m.stepR = lstepsabs, rstepsabs
 }
 
 func setDir(dir rpio.Pin, posdir rpio.State, nsteps int) (steps int) {
