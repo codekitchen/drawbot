@@ -10,6 +10,12 @@ import (
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
+const (
+	penDown = 10
+	penUp   = 5
+)
+const penSleep = time.Millisecond * 1000
+
 type Command struct {
 	// Command is "reset" | "moveTo"
 	Command string  `json:"command"`
@@ -24,12 +30,14 @@ type MotorController struct {
 	RstePin rpio.Pin
 	LdirPin rpio.Pin
 	LstePin rpio.Pin
+	PenPin  rpio.Pin
 
 	X, Y float64 // current pos
 	D    float64 // distance between strings
 
 	startX, startY float64 // start position
 	stepL, stepR   int     // current steps, current pos has to be rounded to step positions
+	penPos         uint32
 }
 
 func MotorControllerInit() {
@@ -49,7 +57,7 @@ func LoadMotorController(path string) (*MotorController, error) {
 		return nil, err
 	}
 
-	mc := &MotorController{}
+	mc := NewMotorController()
 	err = json.Unmarshal(content, mc)
 	if err != nil {
 		return nil, err
@@ -59,7 +67,7 @@ func LoadMotorController(path string) (*MotorController, error) {
 }
 
 func SaveMotorController(mc *MotorController, path string) error {
-	content, err := json.Marshal(mc)
+	content, err := json.MarshalIndent(mc, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -79,6 +87,11 @@ func (m *MotorController) Do(cmd Command) {
 		m.stepL, m.stepR = 0, 0
 	case "moveTo":
 		slog.Debug("moveTo", "cmd", cmd)
+		if cmd.Pen {
+			m.MovePen(penDown)
+		} else {
+			m.MovePen(penUp)
+		}
 		m.MoveTo(cmd.X, cmd.Y)
 	}
 }
@@ -89,16 +102,33 @@ func NewMotorController() *MotorController {
 		LstePin: rpio.Pin(13),
 		RdirPin: rpio.Pin(20),
 		RstePin: rpio.Pin(21),
+		PenPin:  rpio.Pin(18),
 	}
 	return m
 }
 
-func (m *MotorController) MoveTo(x, y float64) {
+func (m *MotorController) Init() {
 	m.LdirPin.Output()
 	m.RdirPin.Output()
 	m.LstePin.Output()
 	m.RstePin.Output()
+	m.PenPin.Output()
+	m.PenPin.Pwm()
+	m.PenPin.Freq(5000)
+	m.penPos = penDown
+	m.PenPin.DutyCycle(penDown, 100)
+}
 
+func (m *MotorController) MovePen(newPos uint32) {
+	if newPos == m.penPos {
+		return
+	}
+	m.penPos = newPos
+	m.PenPin.DutyCycle(m.penPos, 100)
+	time.Sleep(penSleep)
+}
+
+func (m *MotorController) MoveTo(x, y float64) {
 	cur := Vec2{m.X, m.Y}
 	dst := Vec2{x, y}
 	diff := dst.Sub(cur)

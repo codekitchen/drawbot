@@ -7,6 +7,11 @@
   <title>Draw Bot</title>
   <script type="module" src="server.js"></script>
   <script type="module" src="index.js"></script>
+  <style>
+    label {
+      display: block;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,38 +19,52 @@
   <h2>Setup</h2>
   <form id="setup">
     <label>
-      mm between strings:
-      <input id="startd" name="d" value="500" />
+      distance between strings:
+      <input-length id="startd" name="d" value="500" />
     </label>
     <label>
       current x:
-      <input id="startx" name="x" value="100" />
+      <input-length id="startx" name="x" value="100" />
     </label>
     <label>
       current y:
-      <input id="starty" name="y" value="290" />
+      <input-length id="starty" name="y" value="290" />
     </label>
-    <input type="submit" name="action" value="setup" />
+    <input type="submit" value="setup" />
   </form>
 
-  <h2>Run</h2>
-  <form id="runtest">
+  <h2>XY from Strings</h2>
+  <form id="xy-from-strings">
+    <label>
+      Left String:
+      <input-length id="left_string" value="" />
+    </label>
+    <label>
+      Right String:
+      <input-length id="right_string" value="" />
+    </label>
+    <input type="submit" value="xy-from-strings" />
+  </form>
+
+  <h2>Move</h2>
+  <form id="moveto">
     <label>
       x:
-      <input name="x" value="250" />
+      <input-length name="x" value="250" />
     </label>
     <label>
       y:
-      <input name="y" value="290" />
+      <input-length name="y" value="290" />
     </label>
-    <input type="submit" name="action" value="test" />
+    <input type="submit" name="action" value="move" />
   </form>
 
   <h2>Draw SVG</h2>
   <svg-draw id="svg_draw"></svg-draw>
 
   <br/>
-  <button id="triforce">Triforce</button>
+  <button id="pen-up">Pen Up</button>
+  <button id="pen-down">Pen Down</button>
 </body>
 
 </html>

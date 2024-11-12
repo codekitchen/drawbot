@@ -1,4 +1,8 @@
-import { parseSVG, makeAbsolute } from './svg-path-parser/index.js'
+import { parseSVG, makeAbsolute } from './3rd-party/svg-path-parser/index.js'
+import cubicCurve from './3rd-party/adaptive-bezier-curve.js'
+import quadraticCurve from './3rd-party/adaptive-quadratic-curve.js'
+import arcToBezier from './3rd-party/svg-arc-to-bezier.js';
+import { InputLength } from './input_length.js';
 
 const template = document.createElement('template');
 template.innerHTML = String.raw`
@@ -83,13 +87,20 @@ class SVGDraw extends HTMLElement {
       minY = Math.min(minY, t.y);
       maxY = Math.max(maxY, t.y);
     };
+    minX = InputLength.display(minX);
+    maxX = InputLength.display(maxX);
+    minY = InputLength.display(minY);
+    maxY = InputLength.display(maxY);
     this.infoBox.innerText = `${this.commands.length} draw commands.\nExtents: x: [${minX}, ${maxX}], y: [${minY}, ${maxY}]`;
   }
 
-  t({ x, y }) {
+  t(inp) {
+    if (inp instanceof Array) {
+      return this.t({ x: inp[0], y: inp[1] });
+    }
     return {
-      x: x * this.scale + this.translation.x,
-      y: y * this.scale + this.translation.y,
+      x: inp.x * this.scale + this.translation.x,
+      y: inp.y * this.scale + this.translation.y,
     }
   }
 
@@ -107,6 +118,8 @@ class SVGDraw extends HTMLElement {
 
   svgToDrawbot() {
     let drawCommands = [];
+    let prevCmd = { x: 0, y: 0, code: '' };
+    let pts, cp;
     for (let p of this.commands) {
       switch (p.code) {
         case 'M':
@@ -119,6 +132,47 @@ class SVGDraw extends HTMLElement {
           // makeAbsolute lets us treat these all the same
           drawCommands.push({ command: 'moveTo', pen: true, ...this.t(p) });
           break;
+        case 'C':
+          pts = cubicCurve()([p.x0, p.y0], [p.x1, p.y1], [p.x2, p.y2], [p.x, p.y], 1);
+          for (let pt of pts) {
+            drawCommands.push({ command: 'moveTo', pen: true, ...this.t(pt) });
+          }
+          break;
+        case 'S':
+          cp = [p.x0, p.y0];
+          if (isCurve(prevCmd)) {
+            cp = [p.x0+(p.x0-prevCmd.x2), p.y0+(p.y0-prevCmd.y2)];
+          }
+          pts = cubicCurve()([p.x0, p.y0], cp, [p.x2, p.y2], [p.x, p.y], 1);
+          for (let pt of pts) {
+            drawCommands.push({ command: 'moveTo', pen: true, ...this.t(pt) });
+          }
+          break;
+        case 'Q':
+          pts = quadraticCurve()([p.x0, p.y0], [p.x1, p.y1], [p.x, p.y], 1);
+          for (let pt of pts) {
+            drawCommands.push({ command: 'moveTo', pen: true, ...this.t(pt) });
+          }
+          break;
+        case 'T':
+          cp = [p.x0, p.y0];
+          if (isCurve(prevCmd)) {
+            cp = [p.x0+(p.x0-prevCmd.x1), p.y0+(p.y0-prevCmd.y1)];
+          }
+          pts = quadraticCurve()([p.x0, p.y0], cp, [p.x, p.y], 1);
+          for (let pt of pts) {
+            drawCommands.push({ command: 'moveTo', pen: true, ...this.t(pt) });
+          }
+          break;
+        case 'A':
+          let curves = arcToBezier({ px: p.x0, py: p.y0, cx: p.x, cy: p.y, rx: p.rx, ry: p.ry, xAxisRotation: p.xAxisRotation, largeArcFlag: p.largeArc, sweepFlag: p.sweep });
+          for (let curve of curves) {
+            pts = cubicCurve()([p.x0, p.y0], [curve.x1, curve.y1], [curve.x2, curve.y2], [curve.x, curve.y], 1);
+            for (let pt of pts) {
+              drawCommands.push({ command: 'moveTo', pen: true, ...this.t(pt) });
+            }
+          }
+          break;
         default:
           throw new Error(`don't know command: ${p.code}`)
       }
@@ -130,3 +184,6 @@ class SVGDraw extends HTMLElement {
 
 customElements.define('svg-draw', SVGDraw);
 
+function isCurve(cmd) {
+  return cmd.code == 'C' || cmd.code == 'S' || cmd.code == 'Q' || cmd.code == 'T';
+}

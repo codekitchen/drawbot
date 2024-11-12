@@ -21,6 +21,7 @@ func NewServer() *WebsocketServer {
 		slog.Debug("failed to load motor controller", "err", err)
 		mc = NewMotorController()
 	}
+	mc.Init()
 	return &WebsocketServer{
 		mc: mc,
 	}

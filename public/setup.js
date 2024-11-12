@@ -1,5 +1,5 @@
 import Apriltag from './apriltag.js'
-import exifr from './exifr.js'
+import exifr from './3rd-party/exifr.js'
 
 let apriltag = await Apriltag()
 const stringOffsetX = 45, stringOffsetY = 76;

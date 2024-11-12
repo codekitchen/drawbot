@@ -36,7 +36,7 @@ class ServerConnection extends HTMLElement {
   }
 
   serverClose = () => {
-    this.connect()
+    setTimeout(this.connect.bind(this), 1000);
   }
 
   serverOpen = () => {
