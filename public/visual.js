@@ -19,8 +19,6 @@ template.innerHTML = String.raw`
 class DrawbotVisual extends HTMLElement {
   constructor() {
     super();
-    // need to hook up to measurements data
-    // this.state = { d: 500, x: 100, y: 290, h: 400 };
     this.attachShadow({ mode: 'open' });
   }
 

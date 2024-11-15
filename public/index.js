@@ -1,5 +1,6 @@
 import './svg_draw.js'
 import './visual.js'
+import './joystick.js'
 import { Inch, MM, InputLength } from './input_length.js'
 import { bus } from './message_bus.js';
 
@@ -41,16 +42,19 @@ setupForm.addEventListener("submit", (event) => {
   server.send(msg)
 });
 
-let testForm = document.querySelector('form#moveto')
-testForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  let msg = {"command": "moveTo"}
-  for (let v of testForm.querySelectorAll('input-length')) {
-    msg[v.name] = +v.value
-  }
-  console.log('sending moveto data', msg)
-  server.send(msg)
-});
+// let testForm = document.querySelector('form#moveto')
+// testForm.addEventListener("submit", (event) => {
+//   event.preventDefault();
+//   let msg = {"command": "moveTo"}
+//   for (let v of testForm.querySelectorAll('input-length')) {
+//     msg[v.name] = +v.value
+//   }
+//   console.log('sending moveto data', msg)
+//   server.send(msg)
+// });
+bus.on('move-to', ({ detail }) => {
+  server.send({"command": "moveTo", "x": detail.x, "y": detail.y})
+})
 
 let stringForm = document.querySelector('#xy-from-strings')
 stringForm.addEventListener("submit", (event) => {
@@ -66,9 +70,9 @@ stringForm.addEventListener("submit", (event) => {
   starty.value = y.toFixed(2)
 });
 
-document.querySelector('#pen-up').addEventListener('click', () => {
-  server.send({"command": "moveTo", "x": +startx.value, "y": +starty.value, "pen": false})
-})
-document.querySelector('#pen-down').addEventListener('click', () => {
-  server.send({"command": "moveTo", "x": +startx.value, "y": +starty.value, "pen": true})
-})
+// document.querySelector('#pen-up').addEventListener('click', () => {
+//   server.send({"command": "moveTo", "x": +startx.value, "y": +starty.value, "pen": false})
+// })
+// document.querySelector('#pen-down').addEventListener('click', () => {
+//   server.send({"command": "moveTo", "x": +startx.value, "y": +starty.value, "pen": true})
+// })

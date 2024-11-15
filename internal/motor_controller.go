@@ -22,12 +22,14 @@ var updateID = atomic.Uint32{}
 
 type Command struct {
 	// Command is "reset" | "moveTo"
+	// Command back to client is "status"
 	Command string  `json:"command"`
 	D       float64 `json:"d"`
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
 	H       float64 `json:"h"`
 	Pen     bool    `json:"pen"`
+	Idle    bool    `json:"idle"` // server -> client
 }
 
 type MotorController struct {
@@ -86,7 +88,6 @@ func SaveMotorController(mc *MotorController, path string) error {
 const stepsPerMM = 10
 
 func (m *MotorController) Do(cmd Command) {
-
 	switch cmd.Command {
 	case "reset":
 		slog.Debug("reset", "cmd", cmd)
@@ -96,7 +97,7 @@ func (m *MotorController) Do(cmd Command) {
 		m.H = cmd.H
 		m.startX, m.startY = m.X, m.Y
 		m.stepL, m.stepR = 0, 0
-		m.sendUpdate()
+		m.sendUpdate(true)
 	case "moveTo":
 		slog.Debug("moveTo", "cmd", cmd)
 		if cmd.Pen {
@@ -105,7 +106,7 @@ func (m *MotorController) Do(cmd Command) {
 			m.movePen(penUp)
 		}
 		m.moveTo(cmd.X, cmd.Y)
-		m.sendUpdate()
+		m.sendUpdate(true)
 	}
 }
 
@@ -143,6 +144,9 @@ func (m *MotorController) movePen(newPos uint32) {
 }
 
 func (m *MotorController) moveTo(x, y float64) {
+	if x < 0 || y < 0 || x > m.D || y > m.H {
+		return
+	}
 	cur := Vec2{m.X, m.Y}
 	dst := Vec2{x, y}
 	diff := dst.Sub(cur)
@@ -154,7 +158,7 @@ func (m *MotorController) moveTo(x, y float64) {
 	for dst.Sub(step).Mag() > 1.0 {
 		m.moveStep(step.x, step.y)
 		step = step.Add(dir)
-		m.sendUpdate()
+		m.sendUpdate(false)
 	}
 	// final move to exact requested position
 	m.moveStep(x, y)
@@ -220,7 +224,7 @@ func (m *MotorController) GetUpdates(cb func(*Command)) uint32 {
 	m.mu.Lock()
 	m.updaters[id] = cb
 	m.mu.Unlock()
-	m.sendUpdate()
+	m.sendUpdate(true)
 	return id
 }
 
@@ -230,7 +234,7 @@ func (m *MotorController) StopUpdates(id uint32) {
 	m.mu.Unlock()
 }
 
-func (m *MotorController) sendUpdate() {
+func (m *MotorController) sendUpdate(idle bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -240,6 +244,7 @@ func (m *MotorController) sendUpdate() {
 		X:       m.X,
 		Y:       m.Y,
 		H:       m.H,
+		Idle:    idle,
 	}
 	for _, updater := range m.updaters {
 		updater(res)

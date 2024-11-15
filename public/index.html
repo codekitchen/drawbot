@@ -15,6 +15,7 @@
     html, body {
       margin: 0;
       height: 100%;
+      touch-action: none;
     }
     body {
       display: flex;
@@ -96,10 +97,10 @@
   <div id="controls">
     <div id="tabs">
       <label>
-        Setup <input type="radio" name="tab" value="setup" checked />
+        Setup <input type="radio" name="tab" value="setup" />
       </label>
       <label>
-        Move <input type="radio" name="tab" value="move" />
+        Move <input type="radio" name="tab" value="move" checked />
       </label>
       <label>
         Draw <input type="radio" name="tab" value="draw" />
@@ -142,19 +143,7 @@
     </div>
 
     <div class="tab-content" id="tab-move">
-    <form id="moveto">
-      <label>
-        x:
-        <input-length name="x" value="250" />
-      </label>
-      <label>
-        y:
-        <input-length name="y" value="290" />
-      </label>
-      <input type="submit" name="action" value="move" />
-      <button id="pen-up">Pen Up</button>
-      <button id="pen-down">Pen Down</button>
-    </form>
+      <drawbot-joystick></drawbot-joystick>
     </div>
 
     <div class="tab-content" id="tab-draw">
