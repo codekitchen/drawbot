@@ -1,5 +1,17 @@
 # Project Journal
 
+# 2024-11-14
+
+The new motor controllers are here, soldered, and wired up. After a couple practice runs, I figured out how to fabricate the motor cables I needed, as well. It took a few attempts for me to get the JST PH connectors tight, they're tricky.
+
+We tested out a custom .svg on one of our larger windows. I am very happy with the precision, I wasn't sure I'd be able to get closely spaced lines to be so crisp.
+
+![drawbot drew a crow](images/crow.jpeg)
+
+# 2024-11-12
+
+I needed to fabricate some longer 3 meter cables for the stepper motors. My first attempt did not end well, one of the cables ended up shorting out and frying both motor controllers. Fortunately nothing else seems broken. But I'm going to have to wait a couple days for replacement parts.
+
 ## 2024-11-11
 
 Drawing a triforce!
