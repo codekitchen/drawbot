@@ -3,6 +3,7 @@ import cubicCurve from './3rd-party/adaptive-bezier-curve.js'
 import quadraticCurve from './3rd-party/adaptive-quadratic-curve.js'
 import arcToBezier from './3rd-party/svg-arc-to-bezier.js';
 import { InputLength } from './input_length.js';
+import { bus } from './message_bus.js';
 
 const template = document.createElement('template');
 template.innerHTML = String.raw`
@@ -29,6 +30,7 @@ class SVGDraw extends HTMLElement {
     this.scale = 1.0;
     this.translation = { x: 0, y: 0 };
     this.attachShadow({ mode: 'open' });
+    bus.on('bot-status', ({ detail }) => this.changeStart(detail.x, detail.y));
   }
 
   changeStart(x, y) {

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/stianeikeland/go-rpio/v4"
@@ -16,16 +18,22 @@ const (
 )
 const penSleep = time.Millisecond * 1000
 
+var updateID = atomic.Uint32{}
+
 type Command struct {
 	// Command is "reset" | "moveTo"
 	Command string  `json:"command"`
 	D       float64 `json:"d"`
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
+	H       float64 `json:"h"`
 	Pen     bool    `json:"pen"`
 }
 
 type MotorController struct {
+	mu       sync.Mutex
+	updaters map[uint32]func(*Command)
+
 	RdirPin rpio.Pin
 	RstePin rpio.Pin
 	LdirPin rpio.Pin
@@ -34,6 +42,7 @@ type MotorController struct {
 
 	X, Y float64 // current pos
 	D    float64 // distance between strings
+	H    float64 // height of drawing area
 
 	startX, startY float64 // start position
 	stepL, stepR   int     // current steps, current pos has to be rounded to step positions
@@ -77,32 +86,37 @@ func SaveMotorController(mc *MotorController, path string) error {
 const stepsPerMM = 10
 
 func (m *MotorController) Do(cmd Command) {
+
 	switch cmd.Command {
 	case "reset":
 		slog.Debug("reset", "cmd", cmd)
 		m.D = cmd.D
 		m.X = cmd.X
 		m.Y = cmd.Y
+		m.H = cmd.H
 		m.startX, m.startY = m.X, m.Y
 		m.stepL, m.stepR = 0, 0
+		m.sendUpdate()
 	case "moveTo":
 		slog.Debug("moveTo", "cmd", cmd)
 		if cmd.Pen {
-			m.MovePen(penDown)
+			m.movePen(penDown)
 		} else {
-			m.MovePen(penUp)
+			m.movePen(penUp)
 		}
-		m.MoveTo(cmd.X, cmd.Y)
+		m.moveTo(cmd.X, cmd.Y)
+		m.sendUpdate()
 	}
 }
 
 func NewMotorController() *MotorController {
 	m := &MotorController{
-		LdirPin: rpio.Pin(6),
-		LstePin: rpio.Pin(13),
-		RdirPin: rpio.Pin(20),
-		RstePin: rpio.Pin(21),
-		PenPin:  rpio.Pin(18),
+		LdirPin:  rpio.Pin(6),
+		LstePin:  rpio.Pin(13),
+		RdirPin:  rpio.Pin(20),
+		RstePin:  rpio.Pin(21),
+		PenPin:   rpio.Pin(18),
+		updaters: make(map[uint32]func(*Command)),
 	}
 	return m
 }
@@ -119,7 +133,7 @@ func (m *MotorController) Init() {
 	m.PenPin.DutyCycle(penDown, 100)
 }
 
-func (m *MotorController) MovePen(newPos uint32) {
+func (m *MotorController) movePen(newPos uint32) {
 	if newPos == m.penPos {
 		return
 	}
@@ -128,7 +142,7 @@ func (m *MotorController) MovePen(newPos uint32) {
 	time.Sleep(penSleep)
 }
 
-func (m *MotorController) MoveTo(x, y float64) {
+func (m *MotorController) moveTo(x, y float64) {
 	cur := Vec2{m.X, m.Y}
 	dst := Vec2{x, y}
 	diff := dst.Sub(cur)
@@ -140,6 +154,7 @@ func (m *MotorController) MoveTo(x, y float64) {
 	for dst.Sub(step).Mag() > 1.0 {
 		m.moveStep(step.x, step.y)
 		step = step.Add(dir)
+		m.sendUpdate()
 	}
 	// final move to exact requested position
 	m.moveStep(x, y)
@@ -160,8 +175,6 @@ func (m *MotorController) moveStep(x, y float64) {
 	rstepsabs := int(h2d * stepsPerMM)
 	lsteps := lstepsabs - m.stepL
 	rsteps := rstepsabs - m.stepR
-
-	// slog.Debug("moveStep", "lstepsabs", lstepsabs, "lsteps", lsteps, "rstepsabs", rstepsabs, "rsteps", rsteps)
 
 	lsteps = setDir(m.LdirPin, rpio.Low, lsteps)
 	rsteps = setDir(m.RdirPin, rpio.High, rsteps)
@@ -200,4 +213,35 @@ func setDir(dir rpio.Pin, posdir rpio.State, nsteps int) (steps int) {
 
 func invert(s rpio.State) rpio.State {
 	return 1 - s
+}
+
+func (m *MotorController) GetUpdates(cb func(*Command)) uint32 {
+	id := updateID.Add(1)
+	m.mu.Lock()
+	m.updaters[id] = cb
+	m.mu.Unlock()
+	m.sendUpdate()
+	return id
+}
+
+func (m *MotorController) StopUpdates(id uint32) {
+	m.mu.Lock()
+	delete(m.updaters, id)
+	m.mu.Unlock()
+}
+
+func (m *MotorController) sendUpdate() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	res := &Command{
+		Command: "status",
+		D:       m.D,
+		X:       m.X,
+		Y:       m.Y,
+		H:       m.H,
+	}
+	for _, updater := range m.updaters {
+		updater(res)
+	}
 }

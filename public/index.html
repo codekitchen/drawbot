@@ -8,63 +8,159 @@
   <script type="module" src="server.js"></script>
   <script type="module" src="index.js"></script>
   <style>
-    label {
+    /* hiding for now */
+    #xy-from-strings {
+      display: none;
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    #topbar {
+      color: white;
+      background-color: #333;
+      line-height: 2em;
+      height: 2em;
+    }
+    #topbar > * {
+      display: inline-block;
+    }
+    #unit-selector label {
+      display: inline-block;
+      margin-left: 2em;
+    }
+    drawbot-visual {
+      flex-grow: 1;
+      flex-shrink: 1;
+    }
+    #controls {
+      flex-shrink: 0;
+    }
+    #tabs {
+      display: flex;
+      color: white;
+      line-height: 2em;
+      height: 2em;
+      background-color: #333;
+    }
+    #tabs label {
+      text-align: center;
+      flex-grow: 1;
+    }
+    #tabs label:has(input:checked) {
+      background-color: darkgreen;
+    }
+    #tabs label input {
+      position: absolute;
+      margin-left: -9999px;
+    }
+    .tab-content {
+      display: none;
+      margin: 1em;
+    }
+    /* hard-coded silliness, but it works */
+    #tabs:has(input[value="setup"]:checked) ~ #tab-setup {
+      display: block;
+    }
+    #tabs:has(input[value="move"]:checked) ~ #tab-move {
+      display: block;
+    }
+    #tabs:has(input[value="draw"]:checked) ~ #tab-draw {
+      display: block;
+    }
+    .tab-content label {
       display: block;
     }
   </style>
 </head>
 
 <body>
-  <server-connection id="server"></server-connection>
-  <h2>Setup</h2>
-  <form id="setup">
-    <label>
-      distance between strings:
-      <input-length id="startd" name="d" value="500" />
-    </label>
-    <label>
-      current x:
-      <input-length id="startx" name="x" value="100" />
-    </label>
-    <label>
-      current y:
-      <input-length id="starty" name="y" value="290" />
-    </label>
-    <input type="submit" value="setup" />
-  </form>
+  <div id="topbar">
+    <server-connection id="server"></server-connection>
+    <div id="unit-selector">
+      <label>
+        <input type="radio" name="unit" value="mm" />mm
+      </label>
+      <label>
+        <input type="radio" name="unit" value="in" checked />in
+      </label>
+    </div>
+  </div>
 
-  <h2>XY from Strings</h2>
-  <form id="xy-from-strings">
-    <label>
-      Left String:
-      <input-length id="left_string" value="" />
-    </label>
-    <label>
-      Right String:
-      <input-length id="right_string" value="" />
-    </label>
-    <input type="submit" value="xy-from-strings" />
-  </form>
+  <drawbot-visual></drawbot-visual>
 
-  <h2>Move</h2>
-  <form id="moveto">
-    <label>
-      x:
-      <input-length name="x" value="250" />
-    </label>
-    <label>
-      y:
-      <input-length name="y" value="290" />
-    </label>
-    <input type="submit" name="action" value="move" />
-  </form>
+  <div id="controls">
+    <div id="tabs">
+      <label>
+        Setup <input type="radio" name="tab" value="setup" checked />
+      </label>
+      <label>
+        Move <input type="radio" name="tab" value="move" />
+      </label>
+      <label>
+        Draw <input type="radio" name="tab" value="draw" />
+      </label>
+    </div>
 
-  <h2>Draw SVG</h2>
-  <svg-draw id="svg_draw"></svg-draw>
+    <div class="tab-content" id="tab-setup">
+      <form id="setup">
+        <label>
+          distance between strings:
+          <input-length id="startd" name="d" value="500" />
+        </label>
+        <label>
+          current x:
+          <input-length id="startx" name="x" value="100" />
+        </label>
+        <label>
+          current y:
+          <input-length id="starty" name="y" value="290" />
+        </label>
+        <label>
+          drawing area height:
+          <input-length id="starth" name="h" value="400" />
+        </label>
+        <input type="submit" value="setup" />
+      </form>
 
-  <br/>
-  <button id="pen-up">Pen Up</button>
-  <button id="pen-down">Pen Down</button>
+      <form id="xy-from-strings">
+        <h2>XY from Strings</h2>
+        <label>
+          Left String:
+          <input-length id="left_string" value="" />
+        </label>
+        <label>
+          Right String:
+          <input-length id="right_string" value="" />
+        </label>
+        <input type="submit" value="xy-from-strings" />
+      </form>
+    </div>
+
+    <div class="tab-content" id="tab-move">
+    <form id="moveto">
+      <label>
+        x:
+        <input-length name="x" value="250" />
+      </label>
+      <label>
+        y:
+        <input-length name="y" value="290" />
+      </label>
+      <input type="submit" name="action" value="move" />
+      <button id="pen-up">Pen Up</button>
+      <button id="pen-down">Pen Down</button>
+    </form>
+    </div>
+
+    <div class="tab-content" id="tab-draw">
+      <svg-draw id="svg_draw"></svg-draw>
+    </div>
+  </div>
 </body>
 
 </html>

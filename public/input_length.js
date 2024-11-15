@@ -1,3 +1,5 @@
+import { bus } from './message_bus.js';
+
 const template = document.createElement('template');
 template.innerHTML = String.raw`
   <input type="number" step="any" /> <span>mm</span>
@@ -24,9 +26,7 @@ export class InputLength extends HTMLElement {
 
   static set mode(mode) {
     InputLength._mode = mode;
-    for (let el of document.querySelectorAll('input-length')) {
-      el.changeMode(mode);
-    }
+    bus.emit('length-mode', { mode });
   }
 
   static display(val_in_mm) {
@@ -37,6 +37,7 @@ export class InputLength extends HTMLElement {
   }
 
   connectedCallback() {
+    bus.on('length-mode', this.changeMode);
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.input = this.shadowRoot.querySelector('input');
     // set default value
@@ -47,6 +48,10 @@ export class InputLength extends HTMLElement {
         val *= InchToMM;
       this.#value = val;
     }
+  }
+
+  disconnectedCallback() {
+    bus.off('length-mode', this.changeMode);
   }
 
   get name() {
@@ -65,7 +70,7 @@ export class InputLength extends HTMLElement {
     this.input.value = (val|0)==val ? val : val.toFixed(2);
   }
 
-  changeMode(mode) {
+  changeMode = ({ detail: { mode } }) => {
     this.mode = mode;
     this.value = this.#value;
     this.shadowRoot.querySelector('span').innerText = mode;

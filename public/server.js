@@ -1,6 +1,16 @@
 const template = document.createElement('template');
-template.innerHTML = `
+template.innerHTML = String.raw`
   <style>
+    #status {
+      padding: 0 1em;
+      color: white;
+    }
+    #status.connecting {
+      background-color: darkred;
+    }
+    #status.connected {
+      background-color: darkblue;
+    }
   </style>
   <div id="status">Server Connection</div>
 `;
@@ -15,6 +25,7 @@ class ServerConnection extends HTMLElement {
   connectedCallback() {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.statusDiv = this.shadowRoot.getElementById('status');
+    this.statusDiv.classList.add('connecting');
   }
 
   connect(messageCB) {
@@ -36,10 +47,14 @@ class ServerConnection extends HTMLElement {
   }
 
   serverClose = () => {
+    this.statusDiv.classList.remove('connected');
+    this.statusDiv.classList.add('connecting');
     setTimeout(this.connect.bind(this), 1000);
   }
 
   serverOpen = () => {
+    this.statusDiv.classList.remove('connecting');
+    this.statusDiv.classList.add('connected');
     this.statusDiv.innerText = 'Connected'
   }
 

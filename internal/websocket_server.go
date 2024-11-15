@@ -43,11 +43,10 @@ func (s WebsocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	slog.Debug("accepted websocket", "conn", r.RemoteAddr)
 
-	err = s.writeStatus(ctx, ws)
-	if err != nil {
-		slog.Debug("write error", "err", err)
-		return
-	}
+	hdl := s.mc.GetUpdates(func(status *Command) {
+		s.writeStatus(ctx, ws, status)
+	})
+	defer s.mc.StopUpdates(hdl)
 
 	for {
 		_, bmsg, err := ws.Read(ctx)
@@ -68,22 +67,10 @@ func (s WebsocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			slog.Debug("config error", "err", err)
 			return
 		}
-
-		err = s.writeStatus(ctx, ws)
-		if err != nil {
-			slog.Debug("write error", "err", err)
-			return
-		}
 	}
 }
 
-func (s *WebsocketServer) writeStatus(ctx context.Context, ws *websocket.Conn) error {
-	res := &Command{
-		Command: "status",
-		D:       s.mc.D,
-		X:       s.mc.X,
-		Y:       s.mc.Y,
-	}
+func (s *WebsocketServer) writeStatus(ctx context.Context, ws *websocket.Conn, res *Command) error {
 	resBytes, err := json.Marshal(res)
 	if err != nil {
 		return err

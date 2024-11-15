@@ -1,7 +1,15 @@
 import './svg_draw.js'
+import './visual.js'
 import { Inch, MM, InputLength } from './input_length.js'
+import { bus } from './message_bus.js';
 
 InputLength.mode = Inch;
+
+document.querySelectorAll('#unit-selector input').forEach((el) => {
+  el.addEventListener('change', (ev) => {
+    InputLength.mode = el.value == 'mm' ? MM : Inch;
+  })
+})
 
 server.connect((msg) => {
   console.log('received', msg)
@@ -9,7 +17,8 @@ server.connect((msg) => {
     document.querySelector('#startd').value = msg.d.toFixed(0)
     document.querySelector('#startx').value = msg.x.toFixed(2)
     document.querySelector('#starty').value = msg.y.toFixed(2)
-    svg_draw.changeStart(msg.x, msg.y);
+    document.querySelector('#starth').value = msg.h.toFixed(2)
+    bus.emit('bot-status', msg);
   }
 })
 
