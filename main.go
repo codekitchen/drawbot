@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -27,8 +28,11 @@ func main() {
 }
 
 func run() error {
+	configPath := flag.String("config", "drawbot.json", "path to config file")
+	flag.Parse()
+
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: slog.LevelInfo,
 	})))
 
 	internal.MotorControllerInit()
@@ -46,7 +50,7 @@ func run() error {
 	files, _ := fs.Sub(static, "public")
 
 	handler := http.NewServeMux()
-	wsHandler := internal.NewServer()
+	wsHandler := internal.NewServer(*configPath)
 	handler.Handle("/ws", wsHandler)
 	handler.Handle("/", http.FileServer(http.FS(files)))
 

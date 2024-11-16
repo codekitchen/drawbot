@@ -1,0 +1,13 @@
+# install into /etc/systemd/system/
+[Unit]
+Description=DrawBot
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/bin/drawbot -config /etc/drawbot.json
+User=root
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

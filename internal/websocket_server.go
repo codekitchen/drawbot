@@ -9,21 +9,21 @@ import (
 	"github.com/coder/websocket"
 )
 
-const configPath = "drawbot.json"
-
 type WebsocketServer struct {
-	mc *MotorController
+	mc         *MotorController
+	configPath string
 }
 
-func NewServer() *WebsocketServer {
+func NewServer(configPath string) *WebsocketServer {
 	mc, err := LoadMotorController(configPath)
 	if err != nil {
-		slog.Debug("failed to load motor controller", "err", err)
+		slog.Error("failed to load motor controller config", "err", err)
 		mc = NewMotorController()
 	}
 	mc.Init()
 	return &WebsocketServer{
-		mc: mc,
+		mc:         mc,
+		configPath: configPath,
 	}
 }
 
@@ -62,7 +62,8 @@ func (s WebsocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		s.mc.Do(cmd)
 
-		err = SaveMotorController(s.mc, configPath)
+		// saving the config file after every command is a bit silly
+		err = SaveMotorController(s.mc, s.configPath)
 		if err != nil {
 			slog.Debug("config error", "err", err)
 			return
