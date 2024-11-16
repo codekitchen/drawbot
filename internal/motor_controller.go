@@ -17,6 +17,7 @@ const (
 	penUp   = 5
 )
 const penSleep = time.Millisecond * 1000
+const updateInterval = time.Millisecond * 400
 
 var updateID = atomic.Uint32{}
 
@@ -49,6 +50,7 @@ type MotorController struct {
 	startX, startY float64 // start position
 	stepL, stepR   int     // current steps, current pos has to be rounded to step positions
 	penPos         uint32
+	lastUpdate     time.Time
 }
 
 func MotorControllerInit() {
@@ -238,6 +240,12 @@ func (m *MotorController) sendUpdate(idle bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// always send idle updates, because that means we've stopped and
+	// won't send further updates until the next command.
+	if !idle && time.Since(m.lastUpdate) < updateInterval {
+		return
+	}
+
 	res := &Command{
 		Command: "status",
 		D:       m.D,
@@ -249,4 +257,5 @@ func (m *MotorController) sendUpdate(idle bool) {
 	for _, updater := range m.updaters {
 		updater(res)
 	}
+	m.lastUpdate = time.Now()
 }
