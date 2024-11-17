@@ -23,6 +23,7 @@ class DrawbotVisual extends HTMLElement {
   constructor() {
     super();
     this.preview = [];
+    this.scale = 1;
     this.translation = new V;
     this.attachShadow({ mode: 'open' });
   }
@@ -72,16 +73,20 @@ class DrawbotVisual extends HTMLElement {
     bus.emit('viz-joystick', new V);
   }
 
-  worldToScreen(x, y) {
+  setScale() {
     const w = this.div.clientWidth;
-    const scaleFactor = (w - originx * 2) / this.state.d;
-    return [x * scaleFactor + originx, y * scaleFactor + originy];
+    const h = this.div.clientHeight;
+    const sx = (w - originx * 2) / this.state.d;
+    const sy = (h - originy * 2) / this.state.h;
+    this.scale = Math.min(sx, sy);
+  }
+
+  worldToScreen(x, y) {
+    return [x * this.scale + originx, y * this.scale + originy];
   }
 
   screenToWorld(x, y) {
-    const w = this.div.clientWidth;
-    const scaleFactor = (w - originx * 2) / this.state.d;
-    return [(x - originx) / scaleFactor, (y - originy) / scaleFactor];
+    return [(x - originx) / this.scale, (y - originy) / this.scale];
   }
 
   draw() {
@@ -90,7 +95,7 @@ class DrawbotVisual extends HTMLElement {
     const h = canvas.height = this.div.clientHeight;
     if (!this.state)
       return;
-    const scaleFactor = (w - originx * 2) / this.state.d;
+    this.setScale();
     const worldToScreen = this.worldToScreen.bind(this);
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, w, h);
