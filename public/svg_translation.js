@@ -8,13 +8,17 @@ const curveScale = 1.0;
 export function pathFromSVG(svgStr) {
   const parser = new DOMParser();
   const svg = parser.parseFromString(svgStr, "image/svg+xml");
-  const pathNode = svg.querySelector('path');
-  if (!pathNode)
+  const pathNodes = svg.querySelectorAll('path');
+  if (!pathNodes)
     return null;
-  const path = pathNode.getAttribute('d');
-  if (!path)
-    return null;
-  return makeAbsolute(parseSVG(path));
+  let commands = [];
+  for (let pathNode of pathNodes) {
+    const path = pathNode.getAttribute('d');
+    if (!path)
+      continue;
+    commands = commands.concat(makeAbsolute(parseSVG(path)));
+  }
+  return commands;
 }
 
 export function svgToDrawbot(pathCommands, scale, translation) {
