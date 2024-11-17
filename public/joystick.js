@@ -4,6 +4,8 @@ import { V } from "./vec.js";
 const template = document.createElement('template');
 template.innerHTML = String.raw`
   <div>Drag on the visualization to move the robot manually.</div>
+  <button id="pen-up">Pen Up</button>
+  <button id="pen-down">Pen Down</button>
 `;
 
 const DEADZONE_R = 40;
@@ -13,17 +15,20 @@ class DrawbotJoystick extends HTMLElement {
     super();
     this.pos = new V();
     this.botState = { x: 0, y: 0, idle: false };
-    this.attachShadow({ mode: 'open' });
   }
 
   connectedCallback() {
+    this.appendChild(template.content.cloneNode(true));
+    this.querySelector('#pen-up').addEventListener('click', () => {
+      bus.emit('pen-up');
+    });
+    this.querySelector('#pen-down').addEventListener('click', () => {
+      bus.emit('pen-down');
+    });
     bus.on('viz-joystick', ({ detail }) => {
       if (!this.checkVisibility()) return;
       this.move(detail);
     });
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-    this.div = this.shadowRoot.querySelector('div');
-    this.canvas = this.shadowRoot.querySelector('canvas');
     bus.on('bot-status', ({ detail }) => {
       this.botState = detail;
       this.maybeSendMove();

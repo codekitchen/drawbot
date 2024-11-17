@@ -2,11 +2,6 @@ import { bus } from './message_bus.js';
 
 const template = document.createElement('template');
 template.innerHTML = String.raw`
-  <style>
-    input {
-      font-size: 16px;
-    }
-  </style>
   <input type="number" step="any" /> <span>mm</span>
 `;
 
@@ -17,12 +12,12 @@ const InchToMM = 25.4;
 
 export class InputLength extends HTMLElement {
   static _mode = MM;
-  #value = 0; // always in mm
+  #value; // always in mm
 
   constructor() {
     super();
+    this.#value = 0;
     this.mode = InputLength.mode;
-    this.attachShadow({ mode: 'open' });
   }
 
   static get mode() {
@@ -35,7 +30,7 @@ export class InputLength extends HTMLElement {
   }
 
   static display(val_in_mm) {
-    let val = val_in_mm;
+    let val = +val_in_mm;
     if (InputLength.mode === Inch)
       val /= InchToMM;
     return (val|0)==val ? val : val.toFixed(2);
@@ -43,8 +38,8 @@ export class InputLength extends HTMLElement {
 
   connectedCallback() {
     bus.on('length-mode', this.changeMode);
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-    this.input = this.shadowRoot.querySelector('input');
+    this.appendChild(template.content.cloneNode(true));
+    this.input = this.querySelector('input');
     // set default value
     this.value = +this.getAttribute('value');
     this.input.oninput = (ev) => {
@@ -69,7 +64,7 @@ export class InputLength extends HTMLElement {
   }
 
   set value(val) {
-    this.#value = val;
+    this.#value = +val;
     if (this.mode === Inch)
       val /= InchToMM;
     this.input.value = (val|0)==val ? val : val.toFixed(2);
@@ -78,7 +73,7 @@ export class InputLength extends HTMLElement {
   changeMode = ({ detail: { mode } }) => {
     this.mode = mode;
     this.value = this.#value;
-    this.shadowRoot.querySelector('span').innerText = mode;
+    this.querySelector('span').innerText = mode;
   }
 }
 

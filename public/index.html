@@ -23,6 +23,10 @@
       display: flex;
       flex-direction: column;
       font-size: 16px;
+      line-height: 1.7em;
+    }
+    input {
+      font-size: 16px;
     }
     #topbar {
       color: white;
@@ -113,20 +117,16 @@
     <div class="tab-content" id="tab-setup">
       <form id="setup">
         <label>
-          distance between strings:
-          <input-length id="startd" name="d" value="500" />
+          <input-length id="startd" name="d" value="500"></input-length> : between strings
         </label>
         <label>
-          current x:
-          <input-length id="startx" name="x" value="100" />
+          <input-length id="startx" name="x" value="100"></input-length> : current x
         </label>
         <label>
-          current y:
-          <input-length id="starty" name="y" value="290" />
+          <input-length id="starty" name="y" value="290"></input-length> : current y
         </label>
         <label>
-          drawing area height:
-          <input-length id="starth" name="h" value="400" />
+          <input-length id="starth" name="h" value="400"></input-length> : drawing area height
         </label>
         <input type="submit" value="setup" />
       </form>

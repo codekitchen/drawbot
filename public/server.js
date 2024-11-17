@@ -43,6 +43,7 @@ class ServerConnection extends HTMLElement {
   }
 
   send(msg) {
+    console.log('sending', msg)
     this.ws.send(JSON.stringify(msg))
   }
 
