@@ -1,5 +1,6 @@
 import { InputLength } from './input_length.js'
 import { bus } from './message_bus.js';
+import { V } from "./vec.js";
 
 const template = document.createElement('template');
 template.innerHTML = String.raw`
@@ -16,9 +17,13 @@ template.innerHTML = String.raw`
   <div><canvas></canvas></div>
 `;
 
+const originx = 20, originy = 20;
+
 class DrawbotVisual extends HTMLElement {
   constructor() {
     super();
+    this.preview = [];
+    this.translation = new V;
     this.attachShadow({ mode: 'open' });
   }
 
@@ -34,6 +39,41 @@ class DrawbotVisual extends HTMLElement {
       this.state = detail;
       this.draw();
     });
+    bus.on('preview', ({ detail }) => {
+      this.preview = detail.lines;
+      this.draw();
+    });
+    bus.on('draw-reset', () => this.translation = new V);
+    this.div.addEventListener('pointerdown', this.pointerStart);
+    this.div.addEventListener('pointermove', this.pointerMove);
+  }
+
+  pointerStart = (ev) => {
+    if (ev.target != this.canvas || ev.buttons != 1)
+      return;
+    this.canvas.setPointerCapture(ev.pointerId);
+    this.lastPoint = new V(ev.offsetX, ev.offsetY);
+  }
+
+  pointerMove = (ev) => {
+    if (ev.target != this.canvas || ev.buttons != 1)
+      return;
+    const newPoint = new V(...this.screenToWorld(ev.offsetX, ev.offsetY));
+    const delta = newPoint.sub(new V(...this.screenToWorld(this.lastPoint.x, this.lastPoint.y)));
+    bus.emit('draw-translate', { delta });
+    this.lastPoint = new V(ev.offsetX, ev.offsetY);
+  }
+
+  worldToScreen(x, y) {
+    const w = this.div.clientWidth;
+    const scaleFactor = (w - originx * 2) / this.state.d;
+    return [x * scaleFactor + originx, y * scaleFactor + originy];
+  }
+
+  screenToWorld(x, y) {
+    const w = this.div.clientWidth;
+    const scaleFactor = (w - originx * 2) / this.state.d;
+    return [(x - originx) / scaleFactor, (y - originy) / scaleFactor];
   }
 
   draw() {
@@ -42,9 +82,8 @@ class DrawbotVisual extends HTMLElement {
     const h = canvas.height = this.div.clientHeight;
     if (!this.state)
       return;
-    const originx = 20, originy = 20;
     const scaleFactor = (w - originx * 2) / this.state.d;
-    const worldToScreen = (x, y) => ([x * scaleFactor + originx, y * scaleFactor + originy]);
+    const worldToScreen = this.worldToScreen.bind(this);
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, w, h);
 
@@ -95,19 +134,17 @@ class DrawbotVisual extends HTMLElement {
     ctx.fillText(InputLength.display(this.state.y), 0, 0);
     ctx.restore();
 
-
-    // ctx.strokeRect(0, 0, w, h);
-    // ctx.moveTo(0, 0);
-    // ctx.lineTo(w, h);
-    // ctx.stroke();
-    // ctx.beginPath();
-    // for (let cmd of svg_draw.commands) {
-    //   if (cmd.command == 'moveTo') {
-    //     ctx.moveTo(cmd.x, cmd.y);
-    //   } else {
-    //     ctx.lineTo(cmd.x, cmd.y);
-    //   }
-    // }
+    ctx.beginPath();
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    for (let line of this.preview) {
+      if (line.pen) {
+        ctx.lineTo(...worldToScreen(line.x, line.y));
+      } else {
+        ctx.moveTo(...worldToScreen(line.x, line.y));
+      }
+    }
+    ctx.stroke();
   }
 }
 

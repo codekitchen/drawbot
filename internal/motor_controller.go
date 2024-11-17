@@ -17,7 +17,7 @@ const (
 	penUp   = 5
 )
 const penSleep = time.Millisecond * 1000
-const updateInterval = time.Millisecond * 400
+const updateInterval = time.Millisecond * 150
 
 var updateID = atomic.Uint32{}
 
