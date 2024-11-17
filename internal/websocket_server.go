@@ -62,11 +62,12 @@ func (s WebsocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		s.mc.Do(cmd)
 
-		// saving the config file after every command is a bit silly
-		err = SaveMotorController(s.mc, s.configPath)
-		if err != nil {
-			slog.Debug("config error", "err", err)
-			return
+		if cmd.Command == "reset" {
+			err = SaveMotorController(s.mc, s.configPath)
+			if err != nil {
+				slog.Debug("config error", "err", err)
+				return
+			}
 		}
 	}
 }
