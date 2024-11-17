@@ -49,7 +49,8 @@ class SVGDraw extends HTMLElement {
     this.infoBox = this.shadowRoot.querySelector('#svg-info')
     this.update();
 
-    bus.on('draw-translate', ({ detail }) => {
+    bus.on('viz-drag', ({ detail }) => {
+      if (!this.checkVisibility()) return;
       this.translation = this.translation.add(detail.delta);
       this.update();
     });

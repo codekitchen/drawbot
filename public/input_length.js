@@ -2,6 +2,11 @@ import { bus } from './message_bus.js';
 
 const template = document.createElement('template');
 template.innerHTML = String.raw`
+  <style>
+    input {
+      font-size: 16px;
+    }
+  </style>
   <input type="number" step="any" /> <span>mm</span>
 `;
 

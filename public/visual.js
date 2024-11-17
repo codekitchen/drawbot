@@ -46,6 +46,7 @@ class DrawbotVisual extends HTMLElement {
     bus.on('draw-reset', () => this.translation = new V);
     this.div.addEventListener('pointerdown', this.pointerStart);
     this.div.addEventListener('pointermove', this.pointerMove);
+    this.div.addEventListener('pointerup', this.pointerStop);
   }
 
   pointerStart = (ev) => {
@@ -53,6 +54,7 @@ class DrawbotVisual extends HTMLElement {
       return;
     this.canvas.setPointerCapture(ev.pointerId);
     this.lastPoint = new V(ev.offsetX, ev.offsetY);
+    this.startPoint = new V(ev.offsetX, ev.offsetY);
   }
 
   pointerMove = (ev) => {
@@ -60,8 +62,14 @@ class DrawbotVisual extends HTMLElement {
       return;
     const newPoint = new V(...this.screenToWorld(ev.offsetX, ev.offsetY));
     const delta = newPoint.sub(new V(...this.screenToWorld(this.lastPoint.x, this.lastPoint.y)));
-    bus.emit('draw-translate', { delta });
+    bus.emit('viz-drag', { delta });
     this.lastPoint = new V(ev.offsetX, ev.offsetY);
+    const screenPoint = new V(ev.offsetX, ev.offsetY);
+    bus.emit('viz-joystick', screenPoint.sub(this.startPoint));
+  }
+
+  pointerStop = (ev) => {
+    bus.emit('viz-joystick', new V);
   }
 
   worldToScreen(x, y) {
