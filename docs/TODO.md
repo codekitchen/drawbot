@@ -11,4 +11,4 @@
 
 - [ ] solenoid for lifting off the surface instead of servo
 - [ ] barrel jack for motor power so it can be disconnected
-- [ ]
+- [ ] some way to keep tension against the window when the pen moves further down from the top motors

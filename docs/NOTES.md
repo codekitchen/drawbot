@@ -1,3 +1,19 @@
+# Setup
+
+1. Attach the motors to the top left/right of the surface using the suction cups.
+2. Attach motor cables to controllers and motors.
+3. Power up the controllers. WARNING: Don't do this before the cables are attached.
+4. Attach the pen gantry to the strings. I like to tie the strings to paper clips and hook the clips to the pen gantry, it's a lot easier to detach after.
+5. Attach the servo motor cable.
+6. Turn on the pi.
+7. Press the "pen up" button in the web ui.
+8. Insert the pen so that it just barely isn't touching the surface, then tighten the screw to secure it in place.
+9. Start drawing!
+
+# Teardown
+
+Reverse order of setup.
+
 # Apriltag Detection
 
 - [Webcam to JPEG](https://medium.com/@arpit23sh/capturing-webcam-images-using-html-and-javascript-9b8896ef1705)
