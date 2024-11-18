@@ -164,6 +164,7 @@ func (m *MotorController) moveTo(x, y float64) {
 	}
 	// final move to exact requested position
 	m.moveStep(x, y)
+	time.Sleep(time.Millisecond * 3)
 }
 
 func (m *MotorController) moveStep(x, y float64) {
