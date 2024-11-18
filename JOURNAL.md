@@ -1,5 +1,19 @@
 # Project Journal
 
+# 2024-11-17
+
+I did a lot of polish to the web ui, and made some improvements to drawing accuracy as well.
+
+The web ui now shows a preview of what it's going to draw, and you can resize and move the drawing around to where you want it to be drawn in relation to the motors and current pen location.
+
+I've added some [NOTES](docs/NOTES.md) and [TODOs](docs/TODO.md).
+
+I am finding that when the pen descends more than about 1 meter below the motors, it starts losing tension against the surface and sometimes pulling away and not drawing. I think I'd probably need to add something to tension it from the bottom to get it working better at that distance.
+
+![bubble bobble drawing](images/bubble.png)
+
+![web ui](images/webui.png)
+
 # 2024-11-14
 
 The new motor controllers are here, soldered, and wired up. After a couple practice runs, I figured out how to fabricate the motor cables I needed, as well. It took a few attempts for me to get the JST PH connectors tight, they're tricky.
