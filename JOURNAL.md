@@ -10,7 +10,7 @@ I've added some [NOTES](docs/NOTES.md) and [TODOs](docs/TODO.md).
 
 I am finding that when the pen descends more than about 1 meter below the motors, it starts losing tension against the surface and sometimes pulling away and not drawing. I think I'd probably need to add something to tension it from the bottom to get it working better at that distance.
 
-![bubble bobble drawing](images/bubble.png)
+![bubble bobble drawing](images/bubble.jpeg)
 
 ![web ui](images/webui.png)
 

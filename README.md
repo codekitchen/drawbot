@@ -8,7 +8,15 @@ I'm using some hardware I already have on hand, and I'm otherwise buying some di
 
 I've ended up making my own models for some of the 3D printed parts to match my needs. Those can be found in the [models](models/) folder in parameterized [OpenSCAD](https://openscad.org/) format.
 
+I also ended up writing all my own software for the project, rather than using any of the software from the original drawbot. Just for fun!
+
 ## Progress
+
+![hardware](images/hardware.jpeg)
+
+![ui screenshot](images/webui.png)
+
+![crow on window](images/bubble.jpeg)
 
 I'm keeping a journal in a [separate document](JOURNAL.md).
 
@@ -19,4 +27,3 @@ I'm keeping a journal in a [separate document](JOURNAL.md).
 - [OpenSCAD Cheat Sheet](https://openscad.org/cheatsheet/)
 - [NEMA-17 motor dimensions](https://reprap.org/wiki/NEMA_17_Stepper_motor)
 - [Hull operations](https://hackaday.com/2018/02/13/openscad-tieing-it-together-with-hull/) for OpenSCAD modeling
-- [imperial screw sizes](https://www.mcmaster.com/info/how-to-measure-screw-thread-size.html) reference
